@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mạnh Bùi có lời nhắn đến bạn đó!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e8e4df 0%, #d6d0c8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* ===== Màn hình khóa ===== */
+        .lock-screen {
+            text-align: center;
+            background: #fff;
+            padding: 45px 35px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            max-width: 420px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .lock-screen h2 {
+            color: #5c554c;
+            margin-bottom: 10px;
+            font-size: 22px;
+            font-weight: normal;
+        }
+
+        .lock-screen p {
+            color: #8a857d;
+            font-size: 15px;
+            margin-bottom: 25px;
+        }
+
+        .passcode-input {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .passcode-input input {
+            width: 48px;
+            height: 54px;
+            text-align: center;
+            font-size: 22px;
+            border: 1.5px solid #c8c2b9;
+            border-radius: 8px;
+            outline: none;
+            background: #f9f7f4;
+            transition: 0.3s;
+        }
+
+        .passcode-input input:focus {
+            border-color: #8b7d6b;
+            background: #fff;
+        }
+
+        button {
+            background: #6e6050;
+            color: #f8f6f2;
+            border: none;
+            padding: 13px 38px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #5a4d3f;
+            transform: translateY(-2px);
+        }
+
+        .error {
+            color: #b55454;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* ===== Bức thư & Hiệu ứng lật ===== */
+        .letter-wrapper {
+            position: relative;
+            perspective: 1500px;
+            display: none;
+        }
+
+        .letter {
+            background: #fdfbf8;
+            width: 100%;
+            max-width: 560px;
+            min-height: 420px;
+            padding: 50px 45px;
+            border-radius: 4px;
+            box-shadow: 
+                0 2px 15px rgba(92, 85, 76, 0.1),
+                0 30px 60px rgba(92, 85, 76, 0.15);
+            position: relative;
+            transform-style: preserve-3d;
+            transform-origin: left center;
+            transition: transform 1.2s ease-in-out;
+            opacity: 0;
+            border: 1px solid #e8e4dd;
+        }
+
+        .letter.open {
+            transform: rotateY(0deg);
+            opacity: 1;
+        }
+
+        /* Nếp gấp thư */
+        .letter::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 60px;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, #e2ded5, transparent);
+        }
+
+        .letter-header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2ded5;
+        }
+
+        .letter-header h1 {
+            color: #5c554c;
+            font-size: 24px;
+            font-weight: normal;
+            letter-spacing: 3px;
+        }
+
+        .letter-date {
+            color: #948e85;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .letter-content {
+            color: #4a453d;
+            font-size: 16px;
+            line-height: 1.9;
+            white-space: pre-wrap;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: #8b7d6b;
+            margin-left: 2px;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .closing {
+            margin-top: 40px;
+            text-align: right;
+            color: #7a746b;
+            font-style: italic;
+            font-size: 15px;
+        }
+
+        /* Hiệu ứng mờ dần khi mở thư */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Màn hình khóa -->
+    <div class="lock-screen" id="lockScreen">
+        <h2>🔒 Lời nhắn của Mạnh Bùi</h2>
+        <p>Vui lòng nhập mật mã để xem</p>
+        <div class="passcode-input">
+            <input type="password" maxlength="1" inputmode="numeric">
+            <input type="password" maxlength="1" inputmode="numeric">
+            <input type="password" maxlength="1" inputmode="numeric">
+            <input type="password" maxlength="1" inputmode="numeric">
+            <input type="password" maxlength="1" inputmode="numeric">
+            <input type="password" maxlength="1" inputmode="numeric">
+        </div>
+        <button onclick="checkPasscode()">Mở thư ✉️</button>
+        <p class="error" id="errorMsg">❌ Mật mã sai, vui lòng thử lại</p>
+    </div>
+
+    <!-- Bức thư -->
+    <div class="letter-wrapper" id="letterWrapper">
+        <div class="letter" id="letter">
+            <div class="letter-header">
+                <h1>Ngày 20 tháng 10</h1>
+                <div class="letter-date">20/10/2026</div>
+            </div>
+            <div class="letter-content" id="letterText"></div>
+            <div class="closing">Trân trọng</div>
+        </div>
+    </div>
+
+    <script>
+        // ================= CÀI ĐẶT =================
+        const PASSCODE = '305210'; // 👉 Đổi mật mã ở đây
+        const TYPING_SPEED = 70;
+        // =============================================
+
+        // Nội dung thư
+        const letterContent = `Helluu Phượng nhoo,
+
+Hôm nay là ngày 20/10, tớ chỉ muốn gửi đến bn một lời chúc đơn giản. Chúc bn luôn bình yên, khỏe mạnh và gặp nhiều điều tốt đẹp trong cuộc sống. Mong mọi ngày trong năm đều là những ngày vui vẻ với bn.
+
+7 tháng qua, cảm ơn bn đã từng bước cùng tớ, cho tớ những kỷ niệm đẹp. Đó là một khoảng thời gian đáng nhớ và tớ luôn trân trọng những gì chúng ta đã có. Dù bây giờ mỗi người một hướng, tớ vẫn mong bn có cuộc sống thật tốt.
+
+tớ cũng muốn nói lời xin lỗi. Xin lỗi vì những điều tớ chưa làm được, xin lỗi vì những lúc đã khiến bn buồn va tổn thương. Mong bn bỏ qua cho những thiếu sót của tớ.
+
+Chúc bn sau này mọi sự đều thuận lợi, gặp được những người tốt và sống thật hạnh phúc. ... Cảm ơn em đã từng xuất hiện trong cuộc đời của a, có lẽ sẽ rất lâu nữa anh mới có thể quên được em vì có lẽ từ lâu a đã xem e là 1 phần kh thể thiếu trong cuộc đời anh.
+
+Chúc em một ngày 20/10 vui ve aa.`;
+
+        // Tự động chuyển ô nhập
+        const inputs = document.querySelectorAll('.passcode-input input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', () => {
+                if (input.value && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Mở thư
+        function checkPasscode() {
+            let entered = '';
+            inputs.forEach(input => entered += input.value);
+            
+            if (entered === PASSCODE) {
+                document.getElementById('lockScreen').style.display = 'none';
+                const wrapper = document.getElementById('letterWrapper');
+                const letter = document.getElementById('letter');
+                wrapper.style.display = 'flex';
+                letter.classList.add('open');
+                setTimeout(typeWriter, 600);
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+                inputs.forEach(input => input.value = '');
+                inputs[0].focus();
+            }
+        }
+
+        // Hiệu ứng gõ chữ
+        function typeWriter() {
+            const element = document.getElementById('letterText');
+            let i = 0;
+            function type() {
+                if (i < letterContent.length) {
+                    element.innerHTML = letterContent.substring(0, i + 1) + '<span class="cursor"></span>';
+                    i++;
+                    setTimeout(type, TYPING_SPEED);
+                } else {
+                    element.innerHTML = letterContent;
+                }
+            }
+            type();
+        }
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPasscode();
+        });
+
+        window.onload = () => inputs[0].focus();
+    </script>
+</body>
+</html>
